@@ -189,19 +189,19 @@ int main() {
         clock.restart();
     }
 
-//    //health
-//    sf::Texture texture_health;
-//    if(!texture_health.loadFromFile("health.png")) {
-//        return 1; }
-//    std::vector<sf::Sprite> healths;
-//    sf::Sprite health;
-//    health.scale(0.06, 0.06);
-//    health.setTexture(texture_health);
-//    health.move(0, 20);
+    //    //health
+    //    sf::Texture texture_health;
+    //    if(!texture_health.loadFromFile("health.png")) {
+    //        return 1; }
+    //    std::vector<sf::Sprite> healths;
+    //    sf::Sprite health;
+    //    health.scale(0.06, 0.06);
+    //    health.setTexture(texture_health);
+    //    health.move(0, 20);
 
-//    //heart_1
-//    health.setPosition(sf::Vector2f(rand() % 1920, rand() % 1500 - 1500));
-//    healths.push_back(health);
+    //    //heart_1
+    //    health.setPosition(sf::Vector2f(rand() % 1920, rand() % 1500 - 1500));
+    //    healths.push_back(health);
 
     sf::FloatRect new_Pos_;
     int rect_velocity_x = 150;
@@ -273,6 +273,37 @@ int main() {
     heart.setPosition(sf::Vector2f(1770, 30));
     hearts.push_back(heart);
 
+    sf::Texture texture_wall;
+    if(!texture_wall.loadFromFile("wall.png")) {
+        return 1; }
+    sf::Sprite wall;
+    wall.setTexture(texture_wall);
+    wall.setTextureRect(sf::IntRect(0, 0, 35, 120));
+    texture_wall.setRepeated(true);
+    wall.setRotation(-90);
+
+    //wall_1
+    wall.setPosition(sf::Vector2f(50, 600));
+    walls.push_back(wall);
+    //wall_2;
+    wall.setPosition(sf::Vector2f(300, 750));
+    walls.push_back(wall);
+    //wall_3;
+    wall.setPosition(sf::Vector2f(550, 550));
+    walls.push_back(wall);
+    //wall_4;
+    wall.setPosition(sf::Vector2f(800, 800));
+    walls.push_back(wall);
+    //wall_5;
+    wall.setPosition(sf::Vector2f(1050, 650));
+    walls.push_back(wall);
+    //wall_6;
+    wall.setPosition(sf::Vector2f(1300, 850));
+    walls.push_back(wall);
+    //wall_7;
+    wall.setPosition(sf::Vector2f(1550, 700));
+    walls.push_back(wall);
+
     // run the program as long as the window is open
     while (window.isOpen()) {
         hero.setTextureRect(sf::IntRect(50, 0, 50, 37));
@@ -318,49 +349,52 @@ int main() {
         sf::Keyboard::Key pressed;
         if(event.type == sf::Event::KeyPressed) {
             pressed = event.key.code;
+
+            sf::FloatRect heroBounds = hero.getGlobalBounds();
+            new_Pos_ = heroBounds;
+            heroBounds.left += vel_.x;
+            heroBounds.top += vel_.y;
+            if (heroBounds.left >= window.getSize().x) {
+                hero.setPosition(10, heroBounds.top);
+            }
+            if (heroBounds.left <= 0) {
+                hero.setPosition(window.getSize().x, heroBounds.top);
+            }
+
+            if (hearts.size() == 0) {
+                while (true) {
+                    if (sf::Keyboard::isKeyPressed(sf::Keyboard::Enter)){
+                        window.close();
+                    }
+                    window.clear(sf::Color::White);
+                    window.draw(gameover);
+                    window.display();
+                }
+            }
+
+
+            //            if(heroBounds.left > houseBounds.left
+            //                    && heroBounds.left + heroBounds.width > houseBounds.left + recBounds.width){
+            //                while (true) {
+            //                    if (sf::Keyboard::isKeyPressed(sf::Keyboard::Enter)){
+            //                        window.close();
+            //                    }
+            //                    window.clear(sf::Color::White);
+            //                    window.draw(won);
+
+            //                    window.display();
+            //                }
+            //            }
+
             //        collision
             for(auto &rec : rectangles) {
-                sf::FloatRect heroBounds = hero.getGlobalBounds();
                 sf::FloatRect recBounds = rec.getGlobalBounds();
-                new_Pos_ = heroBounds;
-                heroBounds.left += vel_.x;
-                heroBounds.top += vel_.y;
-                if (heroBounds.left >= window.getSize().x) {
-                    hero.setPosition(10, heroBounds.top);
-                }
-                if (heroBounds.left <= 0) {
-                    hero.setPosition(window.getSize().x, heroBounds.top);
-                }
 
-                //            if(heroBounds.left > houseBounds.left
-                //                    && heroBounds.left + heroBounds.width > houseBounds.left + recBounds.width){
-                //                while (true) {
-                //                    if (sf::Keyboard::isKeyPressed(sf::Keyboard::Enter)){
-                //                        window.close();
-                //                    }
-                //                    window.clear(sf::Color::White);
-                //                    window.draw(won);
-
-                //                    window.display();
-                //                }
-                //            }
-
-                if (hearts.size() == 0) {
-                    while (true) {
-                        if (sf::Keyboard::isKeyPressed(sf::Keyboard::Enter)){
-                            window.close();
-                        }
-                        window.clear(sf::Color::White);
-                        window.draw(gameover);
-                        window.display();
-                    }
-                }
                 for (size_t i = 0; i < hearts.size(); i--) {
                     if(recBounds.intersects(new_Pos_)){
-                        vel_.y = 0.f;
-                        vel_.x = 0.f;
 
-                        //Bottom Collision
+                        //collision with enemy
+                        //Top Collision
                         if(heroBounds.top < recBounds.top
                                 && heroBounds.top  + heroBounds.height < recBounds.top  + recBounds.height
                                 && heroBounds.left < recBounds.left + recBounds.width
@@ -368,7 +402,7 @@ int main() {
                             hearts.pop_back();
                             hero.setPosition(900,800);
                         }
-                        //Top Collision
+                        //Bottom Collision
                         else if(heroBounds.top > recBounds.top
                                 && heroBounds.top  + heroBounds.height > recBounds.top  + recBounds.height
                                 && heroBounds.left < recBounds.left + recBounds.width
@@ -396,6 +430,40 @@ int main() {
                     hero.moveInDirection(elapsed,pressed,hearts);
                 }
             }
+            //        collision with walls
+            for(auto &wall : walls) {
+                sf::FloatRect wallBounds = wall.getGlobalBounds();
+                if(wallBounds.intersects(heroBounds)){
+                    //top Collision
+                    if(heroBounds.top < wallBounds.top
+                            && heroBounds.top  + heroBounds.height < wallBounds.top  + wallBounds.height
+                            && heroBounds.left < wallBounds.left + wallBounds.width
+                            && heroBounds.left + heroBounds.width > wallBounds.left){
+                        hero.setPosition(heroBounds.left, wallBounds.top - heroBounds.height);
+                    }
+                    //bottom Collision
+                    else if(heroBounds.top > wallBounds.top
+                            && heroBounds.top  + heroBounds.height > wallBounds.top  + wallBounds.height
+                            && heroBounds.left < wallBounds.left + wallBounds.width
+                            && heroBounds.left + heroBounds.width > wallBounds.left){
+                        hero.setPosition(heroBounds.left, wallBounds.top + wallBounds.height);
+                    }
+                    //Right Collision
+                    if(heroBounds.left < wallBounds.left
+                            && heroBounds.left + heroBounds.width < wallBounds.left + wallBounds.width
+                            && heroBounds.top < wallBounds.top + wallBounds.height
+                            && heroBounds.top + heroBounds.height > wallBounds.top){
+                        hero.setPosition(wallBounds.left - heroBounds.width, heroBounds.top);
+                    }
+                    //Left Collision
+                    else if(heroBounds.left > wallBounds.left
+                            && heroBounds.left + heroBounds.width > wallBounds.left + wallBounds.width
+                            && heroBounds.top < wallBounds.top + wallBounds.height
+                            && heroBounds.top + heroBounds.height > wallBounds.top){
+                        hero.setPosition(wallBounds.left + wallBounds.width, heroBounds.top);
+                    }
+                }
+            }
         }
         window.clear(sf::Color::Black);
         // draw everything here...
@@ -404,11 +472,14 @@ int main() {
         for(auto &heart_ : hearts) {
             window.draw(heart_);
         }
-//        for(auto &health : healths) {
-//            window.draw(health);
-//        }
+        //        for(auto &health : healths) {
+        //            window.draw(health);
+        //        }
         for(auto &rec : rectangles) {
             window.draw(rec);
+        }
+        for(auto &wall_ : walls) {
+            window.draw(wall_);
         }
         window.display();
     }
