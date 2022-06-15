@@ -9,21 +9,23 @@ int main()
 {
     srand(time(NULL));
     float move_rocket = 0.8;
-    float move_background = 0.02;
+    float move_background = 0.08;
     float scale;
-    int kill = 0;
+    //    int kill = 0;
     float score = 0;
     //    int fiu = 0;
 
-    sf::SoundBuffer buffer, screen, collide;
+    sf::SoundBuffer buffer, screen, collide, game_over;
     buffer.loadFromFile("bonus.wav");
     screen.loadFromFile("intro.wav");
     collide.loadFromFile("collide.wav");
+    game_over.loadFromFile("gameover.wav");
 
-    sf::Sound sound_buffer, sound_screen, sound_collide;
+    sf::Sound sound_buffer, sound_screen, sound_collide, sound_gameover;
     sound_buffer.setBuffer(buffer);
     sound_screen.setBuffer(screen);
     sound_collide.setBuffer(collide);
+    sound_gameover.setBuffer(game_over);
 
     sf::Texture texture, texture_rocket, texture_rock, texture_heart, texture_diamond, texture_gameover;
     texture.loadFromFile("background.png");
@@ -111,7 +113,7 @@ int main()
     hitbox_rocket.setSize(sf::Vector2f(20, 60));
     sf::Vector2f hitbox_rocket_position(rocket_position.x + 30, rocket_position.y + 10);
 
-    sf::RenderWindow window(sf::VideoMode(1000, 900), "Crazy Rocket");
+    sf::RenderWindow window(sf::VideoMode(1000, 900), "Dodge and Kill");
 
     while (window.isOpen()) {
         sf::Event event;
@@ -119,19 +121,27 @@ int main()
             if (event.type == sf::Event::Closed)
                 window.close();
         }
-        if (sf::Keyboard::isKeyPressed(sf::Keyboard::A) && rocket_position.x > 0) {
+        if (sf::Keyboard::isKeyPressed(sf::Keyboard::Left) && rocket_position.x > 0) {
             rocket_position.x = rocket_position.x - move_rocket;
             hitbox_rocket_position.x = hitbox_rocket_position.x - move_rocket;
+            if (sf::Keyboard::isKeyPressed(sf::Keyboard::Left) && rocket_position.x < 0) {
+                rocket_position.x = 925;
+                hitbox_rocket_position.x = 925;
+            }
         }
-        if (sf::Keyboard::isKeyPressed(sf::Keyboard::D) && rocket_position.x < 925) {
+        if (sf::Keyboard::isKeyPressed(sf::Keyboard::Right) && rocket_position.x < 925) {
             rocket_position.x = rocket_position.x + move_rocket;
             hitbox_rocket_position.x = hitbox_rocket_position.x + move_rocket;
+            if (sf::Keyboard::isKeyPressed(sf::Keyboard::Right) && rocket_position.x > 900) {
+                rocket_position.x = 0;
+                hitbox_rocket_position.x = 0;
+            }
         }
-        if (sf::Keyboard::isKeyPressed(sf::Keyboard::W) && rocket_position.y > 0) {
+        if (sf::Keyboard::isKeyPressed(sf::Keyboard::Up) && rocket_position.y > 0) {
             rocket_position.y = rocket_position.y - move_rocket;
             hitbox_rocket_position.y = hitbox_rocket_position.y - move_rocket;
         }
-        if (sf::Keyboard::isKeyPressed(sf::Keyboard::S) && rocket_position.y < 825)  {
+        if (sf::Keyboard::isKeyPressed(sf::Keyboard::Down) && rocket_position.y < 825)  {
             rocket_position.y = rocket_position.y + move_rocket;
             hitbox_rocket_position.y = hitbox_rocket_position.y + move_rocket;
         }
@@ -140,56 +150,69 @@ int main()
         hitbox_rocket.setPosition(hitbox_rocket_position);
         background.setPosition(background_position);
         window.clear(sf::Color::Black);
-        if (kill == 0)  {
-            sound_screen.play();
-            window.draw(background);
-            window.draw(rocket);
-            window.draw(text);
-        }
-        if (sf::Keyboard::isKeyPressed(sf::Keyboard::Enter) && kill < 2) kill = 1;
-        for (int i = 0; i < 800; i++)  {
-            rock[i].getGlobalBounds();
-            if (rock[i].getGlobalBounds().intersects(hitbox_rocket.getGlobalBounds())) kill = 2;
-        }
-        if (kill == 1) {
-            for (int i = 0; i < 25; i++) {
-                diamond[i].getGlobalBounds();
-                if (diamond[i].getGlobalBounds().intersects(hitbox_rocket.getGlobalBounds())) {
-                    score = score + 100;
-                    diamond[i].scale(0.0001, 0.0001);
-                    sound_buffer.play();
-                    break;
+//        for (size_t i = 0; i < hearts.size(); i--) {
+            if (hearts.size() == 4)  {
+                sound_screen.play();
+                window.draw(background);
+                window.draw(rocket);
+                window.draw(text);
+            }
+            for (size_t j = 0; j < hearts.size(); j--) {
+            if (sf::Keyboard::isKeyPressed(sf::Keyboard::Enter) && hearts.size() > 0) hearts.size() == 4;
+            for (int i = 0; i < 800; i++)  {
+                rock[i].getGlobalBounds();
+                if (rock[i].getGlobalBounds().intersects(hitbox_rocket.getGlobalBounds()))
+                {
+                    rock[i].setPosition(1000,1000);
+                    hearts.pop_back();
+                    sound_collide.play();
                 }
             }
-            score = score + 0.01;
-            window.draw(background);
-            window.draw(rocket);
-            //            gameover.play();
-            for (int k = 0; k < 800; k++) {
-                sf::Vector2f rock_position(rock[k].getPosition());
-                rock[k].setPosition(rock_position.x, rock_position.y + 0.8);
-                window.draw(rock[k]);
+            if (hearts.size() > 0) {
+                for (int i = 0; i < 25; i++) {
+                    diamond[i].getGlobalBounds();
+                    if (diamond[i].getGlobalBounds().intersects(hitbox_rocket.getGlobalBounds())) {
+                        score = score + 100;
+                        diamond[i].scale(0.0001, 0.0001);
+                        hearts.push_back(heart);
+                        sound_buffer.play();
+                        break;
+                    }
+                }
+                score = score + 0.01;
+                window.draw(background);
+                window.draw(rocket);
+
+                for (int k = 0; k < 800; k++) {
+                    sf::Vector2f rock_position(rock[k].getPosition());
+                    rock[k].setPosition(rock_position.x, rock_position.y + 0.8);
+                    window.draw(rock[k]);
+                }
+                for (int k = 0; k < 25; k++) {
+                    sf::Vector2f diamond_position(diamond[k].getPosition());
+                    diamond[k].setPosition(diamond_position.x, diamond_position.y + 0.8);
+                    window.draw(diamond[k]);
+                }
+                for(auto &heart_ : hearts) {
+                    window.draw(heart_);
+                }
+                window.draw(points);
+                scores.setString(std::to_string(score));
+                window.draw(scores);
+                //GAME OVER SOUND
+//                sound_gameover.play();
             }
-            for (int k = 0; k < 25; k++) {
-                sf::Vector2f diamond_position(diamond[k].getPosition());
-                diamond[k].setPosition(diamond_position.x, diamond_position.y + 0.8);
-                window.draw(diamond[k]);
-            }
-            for(auto &heart_ : hearts) {
-                window.draw(heart_);
-            }
-            window.draw(points);
-            scores.setString(std::to_string(score));
-            window.draw(scores);
         }
-        if (kill == 2) {
+        if (hearts.size() == 0) {
             window.draw(background);
             window.draw(gameover);
             window.draw(score_);
             point_.setString(std::to_string(score));
             window.draw(point_);
+//            sound_gameover.play();
+            // AFTER ENTER SOUND
         }
-        if (sf::Keyboard::isKeyPressed(sf::Keyboard::Enter) && kill == 2) {
+        if (sf::Keyboard::isKeyPressed(sf::Keyboard::Enter) && hearts.size() == 0) {
             while (true) {
                 window.close();
             }
